@@ -1,0 +1,8 @@
+2024-10-26 21:25:29 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLDataException: Значение слишком длинное для поля "ISBN CHARACTER VARYING(12)": "'1234567890123' (13)"
+Value too long for column "ISBN CHARACTER VARYING(12)": "'1234567890123' (13)"; SQL statement:
+insert into book (author,description,genre,isbn,title,id) values (?,?,?,?,?,?) [22001-214]
+2024-10-27 09:54:29 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLDataException: Значение слишком длинное для поля "ISBN CHARACTER VARYING(12)": "' 2-266-11156-1' (14)"
+Value too long for column "ISBN CHARACTER VARYING(12)": "' 2-266-11156-1' (14)"; SQL statement:
+insert into book (author,description,genre,isbn,title,id) values (?,?,?,?,?,?) [22001-214]
