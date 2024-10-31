@@ -14,7 +14,7 @@ public class Book {
     private Long id;
     @Column(name="isbn", unique = true)
     private String isbn;
-    @Column(name="title", unique = true)
+    @Column(name="title")
     private String title;
     @Column(name="genre")
     private String genre;

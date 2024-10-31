@@ -18,13 +18,13 @@ import java.util.regex.Pattern;
 public class BookService {
     @Autowired
     private BookRepository bookRepository;
-    private static final String ISBN_PATTERN = "^[0-9]-[0-9]{3}-[0-9]{5}-[0-9]$";
+    private static final String ISBN_PATTERN = "^[0-9]-[0-9]{3}-[0-9]{5}-[0-9]{4}$";
     private static final Pattern isbnPattern = Pattern.compile(ISBN_PATTERN);
     private static final String AUTHOR_PATTERN = "^[^0-9]*$";
     private static final Pattern authorPattern = Pattern.compile(AUTHOR_PATTERN);
     private void validateBook(Book book) throws BookValidationException {
         if (book.getIsbn() == null || !isValidIsbn(book.getIsbn())) {
-            throw new BookValidationException("ISBN must be in the format N-NNN-NNNNN-N");
+            throw new BookValidationException("ISBN must be in the format N-NNN-NNNNN-NNNN");
         }
         if (book.getAuthor() == null || !isValidAuthor(book.getAuthor())) {
             throw new BookValidationException("The author field must not contain numbers");
@@ -59,10 +59,9 @@ public class BookService {
     {
         bookRepository.delete(book);
     }
-    @Transactional //Написать проверку на ввод!
+    @Transactional
     public ResponseEntity<?> saveBook(Book book) throws BookValidationException{
-        Optional<Book> existingBook = bookRepository.findById(book.getId());
-        if (existingBook.isEmpty()) {
+        if (bookRepository.findByIsbn(book.getIsbn()).isEmpty()) {
             try{
                 validateBook(book);
                 Book savedBook = bookRepository.save(book);
@@ -77,15 +76,30 @@ public class BookService {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
     }
-
-
-    private Book updateBook( Book excitingBook, Book book)
+    @Transactional
+    public ResponseEntity<?> updateBook(Book book)
     {
-        excitingBook.setIsbn(book.getIsbn());
-        excitingBook.setTitle(book.getTitle());
-        excitingBook.setGenre(book.getGenre());
-        excitingBook.setDescription(book.getDescription());
-        excitingBook.setAuthor(book.getAuthor());
-        return excitingBook;
+        try{
+            validateBook(book);
+            if (bookRepository.findById(bookRepository.findByIsbn(book.getIsbn()).get().getId()).isEmpty())
+            {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+            else
+            {
+                Book excitingBook = bookRepository.findById(bookRepository.findByIsbn(book.getIsbn()).get().getId()).get();
+                excitingBook = book;
+                bookRepository.save(excitingBook);
+                return ResponseEntity.status(HttpStatus.OK).body(excitingBook);
+            }
+        }
+        catch (BookValidationException e)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+        catch (Exception e)
+        {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

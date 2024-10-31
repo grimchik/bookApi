@@ -1,6 +1,7 @@
 package com.example.bookservice.Controller;
 
 import com.example.bookservice.Entity.Book;
+import com.example.bookservice.Exception.BookValidationException;
 import com.example.bookservice.Repository.BookRepository;
 import com.example.bookservice.Service.BookService;
 import jakarta.persistence.EntityNotFoundException;
@@ -66,8 +67,15 @@ public class BookController {
         }
     }
     @PostMapping("api/book")
-    public ResponseEntity<Book> createBook(@RequestBody Book book) {
-
+    public ResponseEntity<?> createBook(@RequestBody Book book) throws BookValidationException {
+        ResponseEntity<?> responseEntity = bookService.saveBook(book);
+        return responseEntity;
+    }
+    @PutMapping("api/book")
+    public ResponseEntity<?> updateBook(@RequestBody Book book)
+    {
+       ResponseEntity<?> responseEntity= bookService.updateBook(book);
+       return responseEntity;
     }
 
     /*@PatchMapping ("api/book/{id}")
