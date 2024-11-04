@@ -1,5 +1,6 @@
 package com.example.bookservice.Controller;
 
+import com.example.bookservice.Dto.BookDTO;
 import com.example.bookservice.Entity.Book;
 import com.example.bookservice.Exception.BookValidationException;
 import com.example.bookservice.Repository.BookRepository;
@@ -41,7 +42,7 @@ public class BookController {
     }
     @GetMapping("/api/book/isbn/{isbn}")
     public ResponseEntity<?> getBooksByIsbn(@PathVariable String isbn) {
-        Optional<Book> book=bookService.findBookByIsbn(isbn);
+        Optional<BookDTO> book=bookService.findBookByIsbn(isbn);
         if (book.isEmpty())
         {
             return ResponseEntity.notFound().build();
@@ -67,14 +68,37 @@ public class BookController {
         }
     }
     @PostMapping("api/book")
-    public ResponseEntity<?> createBook(@RequestBody Book book) throws BookValidationException {
-        ResponseEntity<?> responseEntity = bookService.saveBook(book);
-        return responseEntity;
+    public ResponseEntity<?> createBook(@RequestBody BookDTO book) throws BookValidationException {
+        try
+        {
+            BookDTO bookDTO = bookService.saveBook(book);
+            return new ResponseEntity<>(bookDTO,HttpStatus.CREATED);
+        }
+        catch (BookValidationException exc)
+        {
+            return new ResponseEntity<>(exc.getMessage(),HttpStatus.CONFLICT);
+        }
+        catch (Exception e)
+        {
+            return ResponseEntity.internalServerError().build();
+        }
     }
     @PutMapping("api/book/{id}")
-    public ResponseEntity<?> updateBook(@RequestBody Book book, @PathVariable Long id)
+    public ResponseEntity<?> updateBook(@RequestBody BookDTO book, @PathVariable Long id)
     {
-       ResponseEntity<?> responseEntity= bookService.updateBook(book,id);
-       return responseEntity;
+        try {
+            BookDTO updatedBook = bookService.updateBook(id,book);
+            return new ResponseEntity<>(updatedBook,HttpStatus.OK);
+        } catch (BookValidationException e) {
+            return new ResponseEntity<>(e.getMessage(),HttpStatus.BAD_REQUEST);
+        }
+        catch (EntityNotFoundException exc)
+        {
+            return new ResponseEntity<>(exc.getMessage(),HttpStatus.NOT_FOUND);
+        }
+        catch (Exception e)
+        {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }
