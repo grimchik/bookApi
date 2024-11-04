@@ -71,20 +71,10 @@ public class BookController {
         ResponseEntity<?> responseEntity = bookService.saveBook(book);
         return responseEntity;
     }
-    @PutMapping("api/book")
-    public ResponseEntity<?> updateBook(@RequestBody Book book)
+    @PutMapping("api/book/{id}")
+    public ResponseEntity<?> updateBook(@RequestBody Book book, @PathVariable Long id)
     {
-       ResponseEntity<?> responseEntity= bookService.updateBook(book);
+       ResponseEntity<?> responseEntity= bookService.updateBook(book,id);
        return responseEntity;
     }
-
-    /*@PatchMapping ("api/book/{id}")
-    public ResponseEntity<Book> updateBookById(@PathVariable Long id,@RequestBody Book book) {
-        try {
-            HttpStatus status = bookService.saveBook(book);
-            return new ResponseEntity<>(book, status);
-        } catch (Exception exception) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-    }*/
 }

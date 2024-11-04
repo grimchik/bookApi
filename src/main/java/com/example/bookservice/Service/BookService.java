@@ -77,7 +77,7 @@ public class BookService {
         }
     }
     @Transactional
-    public ResponseEntity<?> updateBook(Book book)
+    public ResponseEntity<?> updateBook(Book book,Long id)
     {
         try{
             validateBook(book);
@@ -87,9 +87,7 @@ public class BookService {
             }
             else
             {
-                Book excitingBook = bookRepository.findById(bookRepository.findByIsbn(book.getIsbn()).get().getId()).get();
-                excitingBook = book;
-                bookRepository.save(excitingBook);
+                bookRepository.save(book,id);
                 return ResponseEntity.status(HttpStatus.OK).body(excitingBook);
             }
         }
