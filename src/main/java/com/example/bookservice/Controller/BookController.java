@@ -17,10 +17,11 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
+@RequestMapping("/api")
 public class BookController {
     @Autowired
     private BookService bookService;
-    @GetMapping("/api/books")
+    @GetMapping("/books")
     public ResponseEntity<List<Book>> getBooks() {
         try {
             return ResponseEntity.ok().body(bookService.findAllBooks());
@@ -28,7 +29,7 @@ public class BookController {
             return ResponseEntity.notFound().build();
         }
     }
-    @GetMapping("/api/book/id/{id}")
+    @GetMapping("/book/id/{id}")
     public ResponseEntity<Book> getBooksById(@PathVariable Long id) {
         Optional<Book> book=bookService.findBookById(id);
         if (book.isEmpty())
@@ -40,7 +41,7 @@ public class BookController {
             return ResponseEntity.ok().body(book.get());
         }
     }
-    @GetMapping("/api/book/isbn/{isbn}")
+    @GetMapping("/book/isbn/{isbn}")
     public ResponseEntity<?> getBooksByIsbn(@PathVariable String isbn) {
         Optional<BookDTO> book=bookService.findBookByIsbn(isbn);
         if (book.isEmpty())
@@ -52,7 +53,7 @@ public class BookController {
             return ResponseEntity.ok().body(book.get());
         }
     }
-    @DeleteMapping("api/book/{id}")
+    @DeleteMapping("/book/{id}")
     public  ResponseEntity<?> deleteBook(@PathVariable Long id)
     {
         try {
@@ -67,11 +68,12 @@ public class BookController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    @PostMapping("api/book")
-    public ResponseEntity<?> createBook(@RequestBody BookDTO book) throws BookValidationException {
+    @PostMapping("/book")
+    public ResponseEntity<?> createBook(@RequestBody BookDTO book,@RequestHeader("Authorization") String authorizationHeader) throws BookValidationException {
         try
         {
-            BookDTO bookDTO = bookService.saveBook(book);
+            String token = authorizationHeader.replace("Bearer ", "");
+            BookDTO bookDTO = bookService.saveBook(book,token);
             return new ResponseEntity<>(bookDTO,HttpStatus.CREATED);
         }
         catch (BookValidationException exc)
@@ -83,7 +85,7 @@ public class BookController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    @PutMapping("api/book/{id}")
+    @PutMapping("/book/{id}")
     public ResponseEntity<?> updateBook(@RequestBody BookDTO book, @PathVariable Long id)
     {
         try {
