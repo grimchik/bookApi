@@ -6,6 +6,7 @@ import com.example.bookservice.Exception.BookValidationException;
 import com.example.bookservice.Mapper.BookMapper;
 import com.example.bookservice.Repository.BookRepository;
 import com.example.bookservice.Repository.LibraryBookRepository;
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,11 +35,19 @@ import java.util.regex.Pattern;
         private static final Pattern authorPattern = Pattern.compile(AUTHOR_PATTERN);
 
         private void validateBook(Book book) throws BookValidationException {
-            if (book.getIsbn() == null || !isValidIsbn(book.getIsbn())) {
-                throw new BookValidationException("ISBN must be in the format N-NNN-NNNNN-NNNN");
+            if (book.getIsbn() == null || !isValidIsbn(book.getIsbn()) ) {
+                throw new BookValidationException("ISBN must be in the format D-DDD-DDDDD-DDDD");
             }
-            if (book.getAuthor() == null || !isValidAuthor(book.getAuthor())) {
+            if (  book.getAuthor() == null || !isValidAuthor(book.getAuthor())) {
                 throw new BookValidationException("The author field must not contain numbers");
+            }
+            if (book.getAuthor() == "" )
+            {
+                throw new BookValidationException("The author field must not empty");
+            }
+            if (book.getTitle() == "" )
+            {
+                throw new BookValidationException("The title field must not empty");
             }
             if (book.getTitle() == null)
             {
@@ -53,6 +62,7 @@ import java.util.regex.Pattern;
                 throw new BookValidationException("The Description field must not empty");
             }
         }
+
 
         private boolean isValidIsbn(String isbn) {
             return isbnPattern.matcher(isbn).matches();
@@ -85,11 +95,12 @@ import java.util.regex.Pattern;
         }
 
         @Transactional
-        public BookDTO saveBook(BookDTO bookDTO,String token) throws BookValidationException {
-            validateBook(bookMapper.toEntity(bookDTO));
+        public BookDTO saveBook(BookDTO bookDTO,String token) throws BookValidationException, EntityExistsException {
+
             if (bookRepository.findByIsbn(bookDTO.getIsbn()).isPresent()) {
-                throw new BookValidationException("Book with the same ISBN already exists");
+                throw new EntityExistsException("Book with the same ISBN already exists");
             }
+            validateBook(bookMapper.toEntity(bookDTO));
             Book book = bookMapper.toEntity(bookDTO);
             Book savedBook = bookRepository.save(book);
             externalServiceClient.addBookToExternalService(savedBook.getId(),token)
@@ -100,16 +111,33 @@ import java.util.regex.Pattern;
 
         @Transactional
         public BookDTO updateBook(Long id, BookDTO updatedBookDTO) throws BookValidationException, EntityNotFoundException {
-            validateBook(bookMapper.toEntity(updatedBookDTO));
+
             Book existingBook = bookRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException("Book with ID " + id + " not found"));
-
-            existingBook.setIsbn(updatedBookDTO.getIsbn());
-            existingBook.setTitle(updatedBookDTO.getTitle());
-            existingBook.setGenre(updatedBookDTO.getGenre());
-            existingBook.setDescription(updatedBookDTO.getDescription());
-            existingBook.setAuthor(updatedBookDTO.getAuthor());
-
-            return bookMapper.toDTO(bookRepository.save(existingBook));
+            if (updatedBookDTO.getIsbn() != null && !updatedBookDTO.getIsbn().trim().isEmpty()) {
+                if (!isValidIsbn(updatedBookDTO.getIsbn())) {
+                    throw new BookValidationException("ISBN must be in the format D-DDD-DDDDD-DDDD");
+                }
+                existingBook.setIsbn(updatedBookDTO.getIsbn());
+            }
+            if (updatedBookDTO.getTitle() != null && !updatedBookDTO.getTitle().trim().isEmpty()) {
+                existingBook.setTitle(updatedBookDTO.getTitle());
+            }
+            if (updatedBookDTO.getGenre() != null && !updatedBookDTO.getGenre().trim().isEmpty()) {
+                existingBook.setGenre(updatedBookDTO.getGenre());
+            }
+            if (updatedBookDTO.getDescription() != null && !updatedBookDTO.getDescription().trim().isEmpty()) {
+                existingBook.setDescription(updatedBookDTO.getDescription());
+            }
+            if (updatedBookDTO.getAuthor() != null && !updatedBookDTO.getAuthor().trim().isEmpty()) {
+                if (!isValidAuthor(updatedBookDTO.getAuthor())) {
+                    throw new BookValidationException("The author field must not contain numbers");
+                }
+                existingBook.setAuthor(updatedBookDTO.getAuthor());
+            }
+            Book updatedBook = bookRepository.save(existingBook);
+            return bookMapper.toDTO(updatedBook);
         }
+
+
     }

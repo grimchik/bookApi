@@ -5,6 +5,7 @@ import com.example.bookservice.Entity.Book;
 import com.example.bookservice.Exception.BookValidationException;
 import com.example.bookservice.Repository.BookRepository;
 import com.example.bookservice.Service.BookService;
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -76,9 +77,13 @@ public class BookController {
             BookDTO bookDTO = bookService.saveBook(book,token);
             return new ResponseEntity<>(bookDTO,HttpStatus.CREATED);
         }
+        catch (EntityExistsException e)
+        {
+            return new ResponseEntity<>(e.getMessage(),HttpStatus.CONFLICT);
+        }
         catch (BookValidationException exc)
         {
-            return new ResponseEntity<>(exc.getMessage(),HttpStatus.CONFLICT);
+            return new ResponseEntity<>(exc.getMessage(),HttpStatus.BAD_REQUEST);
         }
         catch (Exception e)
         {
