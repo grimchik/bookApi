@@ -1,11 +1,9 @@
-package com.example.bookservice.Controller;
+package com.example.bookservice.controller;
 
-import com.example.bookservice.Dto.LibraryBookDTO;
-import com.example.bookservice.Dto.LibraryBookWithoutIdDTO;
-import com.example.bookservice.Service.LibraryBookService;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.example.bookservice.dto.LibraryBookDTO;
+import com.example.bookservice.dto.LibraryBookWithoutIdDTO;
+import com.example.bookservice.service.LibraryBookService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,14 +11,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.zip.DataFormatException;
 
 @RestController
 @RequestMapping("/api/library")
 public class LibraryBookController {
-
     @Autowired
     private LibraryBookService librarybookService;
 
@@ -32,7 +27,6 @@ public class LibraryBookController {
             return ResponseEntity.internalServerError().build();
         }
     }
-
     @PutMapping("/update/{id}")
     public ResponseEntity<?> updateLibraryBook(@RequestBody LibraryBookWithoutIdDTO bookDTO, @PathVariable Long id) {
         try {
@@ -52,7 +46,6 @@ public class LibraryBookController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
-
     @PostMapping("/add/{id}")
     public ResponseEntity<?> createLibraryBook(@PathVariable Long id) {
         try {
@@ -65,5 +58,4 @@ public class LibraryBookController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body( e.getMessage());
         }
     }
-
 }

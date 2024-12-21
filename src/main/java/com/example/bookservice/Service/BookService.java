@@ -1,24 +1,34 @@
-package com.example.bookservice.Service;
+package com.example.bookservice.service;
 
-import com.example.bookservice.Dto.BookDTO;
-import com.example.bookservice.Entity.Book;
-import com.example.bookservice.Exception.BookValidationException;
-import com.example.bookservice.Mapper.BookMapper;
-import com.example.bookservice.Repository.BookRepository;
-import com.example.bookservice.Repository.LibraryBookRepository;
+import com.example.bookservice.dto.BookDTO;
+import com.example.bookservice.dto.BookWithoutIdDTO;
+import com.example.bookservice.entity.Book;
+import com.example.bookservice.exception.BookValidationException;
+import com.example.bookservice.mapper.BookMapper;
+import com.example.bookservice.mapper.BookWithoutIdMapper;
+import com.example.bookservice.mapper.LibraryBookMapper;
+import com.example.bookservice.repository.BookRepository;
+import com.example.bookservice.repository.LibraryBookRepository;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.example.bookservice.Entity.LibraryBook;
+import com.example.bookservice.entity.LibraryBook;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.impl.StaticLoggerBinder;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-    @Service
+@Service
     public class BookService {
+        private static final Logger logger = LoggerFactory.getLogger(BookService.class);
         private final BookRepository bookRepository;
         private final LibraryBookRepository libraryBookRepository;
         private final ExternalServiceClient externalServiceClient;
@@ -29,11 +39,11 @@ import java.util.regex.Pattern;
             this.externalServiceClient = externalServiceClient;
         }
         private final BookMapper bookMapper = BookMapper.INSTANCE;
+        private final BookWithoutIdMapper bookWithoutIdMapper = BookWithoutIdMapper.INSTANCE;
         private static final String ISBN_PATTERN = "^[0-9]-[0-9]{3}-[0-9]{5}-[0-9]{4}$";
         private static final Pattern isbnPattern = Pattern.compile(ISBN_PATTERN);
         private static final String AUTHOR_PATTERN = "^[^0-9]*$";
         private static final Pattern authorPattern = Pattern.compile(AUTHOR_PATTERN);
-
         private void validateBook(Book book) throws BookValidationException {
             if (book.getIsbn() == null || !isValidIsbn(book.getIsbn()) ) {
                 throw new BookValidationException("ISBN must be in the format D-DDD-DDDDD-DDDD");
@@ -63,7 +73,6 @@ import java.util.regex.Pattern;
             }
         }
 
-
         private boolean isValidIsbn(String isbn) {
             return isbnPattern.matcher(isbn).matches();
         }
@@ -72,18 +81,24 @@ import java.util.regex.Pattern;
             return authorPattern.matcher(author).matches();
         }
 
-        public List<Book> findAllBooks() {
-            return bookRepository.findAll();
+        public List<BookDTO> findAllBooks() {
+            return bookRepository.findAll().stream()
+                    .map(BookMapper.INSTANCE::toDTO)
+                    .collect(Collectors.toList());
+        }
+        public BookWithoutIdDTO findBookById(Long id) throws EntityNotFoundException {
+            return bookRepository.findById(id)
+                    .map(bookWithoutIdMapper::toDTO)
+                    .orElseThrow(() -> new EntityNotFoundException("Book with Id: " + id + " not found"));
         }
 
-        public Optional<Book> findBookById(Long id) {
-            return bookRepository.findById(id);
+        public BookDTO findBookByIsbn(String isbn) throws EntityNotFoundException {
+                return bookRepository.findByIsbn(isbn)
+                        .map(bookMapper::toDTO)
+                        .orElseThrow(() -> new EntityNotFoundException("Book with Isbn: " + isbn + " not found"));
         }
 
-        public Optional<BookDTO> findBookByIsbn(String isbn) {
-            return bookRepository.findByIsbn(isbn).map(bookMapper::toDTO);
-        }
-
+        @Transactional
         public void deleteById(Long id) throws EntityNotFoundException {
             if (!bookRepository.existsById(id)) {
                 throw new EntityNotFoundException("Book with ID " + id + " not found");
@@ -95,28 +110,30 @@ import java.util.regex.Pattern;
         }
 
         @Transactional
-        public BookDTO saveBook(BookDTO bookDTO,String token) throws BookValidationException, EntityExistsException {
-
-            if (bookRepository.findByIsbn(bookDTO.getIsbn()).isPresent()) {
+        public BookWithoutIdDTO saveBook(BookWithoutIdDTO bookWithoutIdDDTO, String token) throws BookValidationException, EntityExistsException {
+            if (bookRepository.findByIsbn(bookWithoutIdDDTO.getIsbn()).isPresent()) {
                 throw new EntityExistsException("Book with the same ISBN already exists");
             }
-            validateBook(bookMapper.toEntity(bookDTO));
-            Book book = bookMapper.toEntity(bookDTO);
+            validateBook(bookWithoutIdMapper.toEntity(bookWithoutIdDDTO));
+            Book book = bookWithoutIdMapper.toEntity(bookWithoutIdDDTO);
             Book savedBook = bookRepository.save(book);
-            externalServiceClient.addBookToExternalService(savedBook.getId(),token)
-                    .doOnTerminate(() -> System.out.println("Book ID " + savedBook.getId() + " added to external service"))
+            externalServiceClient.addBookToExternalService(savedBook.getId(), token)
+                    .doOnTerminate(() -> logger.info("Book ID {} added to external service", savedBook.getId()))
                     .subscribe();
-            return bookMapper.toDTO(savedBook);
+            return bookWithoutIdMapper.toDTO(savedBook);
         }
 
         @Transactional
-        public BookDTO updateBook(Long id, BookDTO updatedBookDTO) throws BookValidationException, EntityNotFoundException {
-
+        public BookDTO updateBook(Long id, BookDTO updatedBookDTO) throws BookValidationException, EntityNotFoundException, EntityExistsException {
             Book existingBook = bookRepository.findById(id)
-                    .orElseThrow(() -> new EntityNotFoundException("Book with ID " + id + " not found"));
-            if (updatedBookDTO.getIsbn() != null && !updatedBookDTO.getIsbn().trim().isEmpty()) {
+                    .orElseThrow(() -> new EntityNotFoundException("Book with ID " + id + " not found") );
+            if (updatedBookDTO.getIsbn() != null && !updatedBookDTO.getIsbn().trim().isEmpty() && !updatedBookDTO.getIsbn().equals(existingBook.getIsbn())) {
                 if (!isValidIsbn(updatedBookDTO.getIsbn())) {
                     throw new BookValidationException("ISBN must be in the format D-DDD-DDDDD-DDDD");
+                }
+                if (bookRepository.findByIsbn(updatedBookDTO.getIsbn()).isPresent())
+                {
+                    throw new EntityExistsException("Book with the same ISBN already exists");
                 }
                 existingBook.setIsbn(updatedBookDTO.getIsbn());
             }
@@ -138,6 +155,4 @@ import java.util.regex.Pattern;
             Book updatedBook = bookRepository.save(existingBook);
             return bookMapper.toDTO(updatedBook);
         }
-
-
     }

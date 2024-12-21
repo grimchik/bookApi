@@ -1,7 +1,7 @@
-package com.example.bookservice.Mapper;
+package com.example.bookservice.mapper;
 
-import com.example.bookservice.Dto.LibraryBookDTO;
-import com.example.bookservice.Entity.LibraryBook;
+import com.example.bookservice.dto.LibraryBookDTO;
+import com.example.bookservice.entity.LibraryBook;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 

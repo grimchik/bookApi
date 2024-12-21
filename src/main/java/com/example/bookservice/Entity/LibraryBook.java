@@ -1,4 +1,4 @@
-package com.example.bookservice.Entity;
+package com.example.bookservice.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

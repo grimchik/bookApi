@@ -1,4 +1,4 @@
-package com.example.bookservice.Exception;
+package com.example.bookservice.exception;
 
 public class BookValidationException extends Exception {
     public BookValidationException(String message){

@@ -1,4 +1,4 @@
-package com.example.bookservice.Dto;
+package com.example.bookservice.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BookDTO {
+    private Long id;
     private String isbn;
     private String title;
     private String genre;

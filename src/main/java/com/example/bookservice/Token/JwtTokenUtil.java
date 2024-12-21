@@ -1,4 +1,4 @@
-package com.example.bookservice.Token;
+package com.example.bookservice.token;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

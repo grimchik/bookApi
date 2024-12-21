@@ -1,11 +1,11 @@
-package com.example.bookservice.Service;
+package com.example.bookservice.service;
 
-import com.example.bookservice.Dto.LibraryBookDTO;
-import com.example.bookservice.Dto.LibraryBookWithoutIdDTO;
-import com.example.bookservice.Entity.LibraryBook;
-import com.example.bookservice.Mapper.LibraryBookMapper;
-import com.example.bookservice.Mapper.LibraryBookWithoutIdMapper;
-import com.example.bookservice.Repository.LibraryBookRepository;
+import com.example.bookservice.dto.LibraryBookDTO;
+import com.example.bookservice.dto.LibraryBookWithoutIdDTO;
+import com.example.bookservice.entity.LibraryBook;
+import com.example.bookservice.mapper.LibraryBookMapper;
+import com.example.bookservice.mapper.LibraryBookWithoutIdMapper;
+import com.example.bookservice.repository.LibraryBookRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,20 +20,19 @@ import java.util.stream.Collectors;
 public class LibraryBookService {
     @Autowired
     private LibraryBookRepository libraryBookRepository;
-    private final LibraryBookMapper mapper = LibraryBookMapper.INSTANCE;
-    private final LibraryBookWithoutIdMapper mapper2 = LibraryBookWithoutIdMapper.INSTANCE;
+    private final LibraryBookMapper libraryBookMapper = LibraryBookMapper.INSTANCE;
+    private final LibraryBookWithoutIdMapper libraryBookWithoutIdMapperMapper = LibraryBookWithoutIdMapper.INSTANCE;
     @Transactional
     public LibraryBookDTO saveLibraryBook(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("Book ID cannot be null");
         }
-
         LibraryBook libraryBook = new LibraryBook();
         libraryBook.setIdBook(id);
         libraryBook.setBorrowedAt(null);
         libraryBook.setReturnBy(null);
         libraryBookRepository.save(libraryBook);
-        return mapper.toDTO(libraryBook);
+        return libraryBookMapper.toDTO(libraryBook);
     }
 
     public List<LibraryBookDTO> getAvailableBooks() {
@@ -62,13 +61,9 @@ public class LibraryBookService {
                         }
                         book.setReturnBy(updatedBookDTO.getReturnBy());
                     }
-
                     libraryBookRepository.save(book);
-                    return mapper2.toDTO(book);
+                    return libraryBookWithoutIdMapperMapper.toDTO(book);
                 })
                 .orElseThrow(() -> new EntityNotFoundException("Library Book not found!"));
     }
-
-
-
 }

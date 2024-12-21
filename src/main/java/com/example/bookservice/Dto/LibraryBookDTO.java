@@ -1,4 +1,4 @@
-package com.example.bookservice.Dto;
+package com.example.bookservice.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
@@ -13,9 +13,7 @@ import java.time.LocalDateTime;
 public class LibraryBookDTO {
     private Long idBook;
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm")
-
     private LocalDateTime borrowedAt;
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm")
-
     private LocalDateTime returnBy;
 }

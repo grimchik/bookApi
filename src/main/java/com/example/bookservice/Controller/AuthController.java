@@ -1,6 +1,6 @@
-package com.example.bookservice.Controller;
+package com.example.bookservice.controller;
 
-import com.example.bookservice.Token.JwtTokenUtil;
+import com.example.bookservice.token.JwtTokenUtil;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

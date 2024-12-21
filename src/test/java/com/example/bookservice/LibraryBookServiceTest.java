@@ -1,9 +1,9 @@
 package com.example.bookservice;
-import com.example.bookservice.Dto.LibraryBookDTO;
-import com.example.bookservice.Dto.LibraryBookWithoutIdDTO;
-import com.example.bookservice.Entity.LibraryBook;
-import com.example.bookservice.Repository.LibraryBookRepository;
-import com.example.bookservice.Service.LibraryBookService;
+import com.example.bookservice.dto.LibraryBookDTO;
+import com.example.bookservice.dto.LibraryBookWithoutIdDTO;
+import com.example.bookservice.entity.LibraryBook;
+import com.example.bookservice.repository.LibraryBookRepository;
+import com.example.bookservice.service.LibraryBookService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
