@@ -2,6 +2,7 @@ package com.example.bookservice.repository;
 
 import com.example.bookservice.entity.LibraryBook;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -11,6 +12,10 @@ import java.util.Optional;
 @Repository
 public interface LibraryBookRepository extends JpaRepository<LibraryBook,Long> {
     Optional<LibraryBook> findByIdBook(Long idBook);
-    List<LibraryBook> findByReturnByBeforeOrReturnByIsNull(LocalDateTime currentTime);
+    @Query(value = "SELECT * FROM librarybook " +
+            "WHERE (return_by IS NULL AND borrowed_at IS NULL) " +
+            "OR (return_by < NOW() AND borrowed_at IS NULL) " +
+            "OR (return_by < NOW() AND borrowed_at IS NOT NULL)", nativeQuery = true)
+    List<LibraryBook> findAvailableBooks();
     void deleteByIdBook(Long idBook);
 }

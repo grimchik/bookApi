@@ -21,41 +21,18 @@ public class LibraryBookController {
 
     @GetMapping("/available")
     public ResponseEntity<List<LibraryBookDTO>> getAvailableBooks() {
-        try {
-            return ResponseEntity.ok().body(librarybookService.getAvailableBooks());
-        } catch (Exception exception) {
-            return ResponseEntity.internalServerError().build();
-        }
+        return ResponseEntity.ok().body(librarybookService.getAvailableBooks());
     }
+
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateLibraryBook(@RequestBody LibraryBookWithoutIdDTO bookDTO, @PathVariable Long id) {
-        try {
-            LibraryBookWithoutIdDTO updatedBook = librarybookService.updateBook(id, bookDTO);
-            return ResponseEntity.ok().body(updatedBook);
-        }
-        catch (EntityNotFoundException exc) {
-            return new ResponseEntity<>(exc.getMessage(), HttpStatus.NOT_FOUND);
-        }
-        catch (IllegalArgumentException exception) {
-            return ResponseEntity.badRequest().body(exception.getMessage());
-        }
-        catch (IOException e) {
-            return ResponseEntity.badRequest().body("Invalid date format. Please provide a valid date.");
-        }
-        catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-        }
+    public ResponseEntity<?> updateLibraryBook(@RequestBody LibraryBookWithoutIdDTO bookDTO, @PathVariable Long id) throws IOException {
+        LibraryBookWithoutIdDTO updatedBook = librarybookService.updateBook(id, bookDTO);
+        return ResponseEntity.ok().body(updatedBook);
     }
+
     @PostMapping("/add/{id}")
     public ResponseEntity<?> createLibraryBook(@PathVariable Long id) {
-        try {
-            LibraryBookDTO savedBook = librarybookService.saveLibraryBook(id);
-            return ResponseEntity.ok(savedBook);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body( e.getMessage());
-        }
-        catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body( e.getMessage());
-        }
+        LibraryBookDTO savedBook = librarybookService.saveLibraryBook(id);
+        return ResponseEntity.ok(savedBook);
     }
 }

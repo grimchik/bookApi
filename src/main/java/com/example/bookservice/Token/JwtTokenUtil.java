@@ -3,38 +3,45 @@ package com.example.bookservice.token;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.Claims;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
+@Component
 public class JwtTokenUtil {
 
-    private static final String SECRET_KEY = "3a7df7a8f73f4d10b812d4c6fdafeb25ba4e4ee7f8e3d8a9d3e1c6183f84fae1";
+    @Value("${jwt.secret}")
+    private String secret;
 
-    public static String generateToken(String username) {
+    @Value("${jwt.expiration}")
+    private long expiration;
+
+    public String generateToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 7200000))
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
     }
 
-    public static Claims extractClaims(String token) {
+    public Claims extractClaims(String token) {
         return Jwts.parser()
-                .setSigningKey(SECRET_KEY)
+                .setSigningKey(secret)
                 .parseClaimsJws(token)
                 .getBody();
     }
 
-    public static String extractUsername(String token) {
+    public String extractUsername(String token) {
         return extractClaims(token).getSubject();
     }
 
-    public static boolean isTokenExpired(String token) {
+    public boolean isTokenExpired(String token) {
         return extractClaims(token).getExpiration().before(new Date());
     }
 
-    public static boolean validateToken(String token, String username) {
+    public boolean validateToken(String token, String username) {
         return (username.equals(extractUsername(token)) && !isTokenExpired(token));
     }
 }

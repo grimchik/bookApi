@@ -19,6 +19,11 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    private final JwtTokenUtil jwtTokenUtil;
+
+    public JwtAuthenticationFilter(JwtTokenUtil jwtTokenUtil) {
+        this.jwtTokenUtil = jwtTokenUtil;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -27,10 +32,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             try {
-                Claims claims = JwtTokenUtil.extractClaims(token);
-                String username = JwtTokenUtil.extractUsername(token);
+                Claims claims = jwtTokenUtil.extractClaims(token);
+                String username = jwtTokenUtil.extractUsername(token);
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    if (JwtTokenUtil.validateToken(token, username)) {
+                    if (jwtTokenUtil.validateToken(token, username)) {
                         UsernamePasswordAuthenticationToken authenticationToken =
                                 new UsernamePasswordAuthenticationToken(username, null, null);
                         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -45,3 +50,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 }
+

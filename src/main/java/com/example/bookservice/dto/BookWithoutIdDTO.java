@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BookWithoutIdDTO {
     @Pattern(
-            regexp = "\\d-\\d{3}-\\d{5}-\\d{4}",
+            regexp = "^[0-9]-[0-9]{3}-[0-9]{5}-[0-9]{4}$",
             message = "ISBN must be in the format D-DDD-DDDDD-DDDD"
     )
     private String isbn;
@@ -19,8 +19,10 @@ public class BookWithoutIdDTO {
     private String title;
     @NotBlank(message = "The genre field must not empty")
     private String genre;
-    @NotBlank(message = "The description field must not empty")
     private String description;
-    @NotBlank(message = "The author field must not empty")
+    @Pattern(
+            regexp = "^[^0-9]*$",
+            message = "The author field must not contain numbers"
+    )
     private String author;
 }

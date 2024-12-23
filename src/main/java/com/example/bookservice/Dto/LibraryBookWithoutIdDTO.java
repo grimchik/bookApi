@@ -9,11 +9,10 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LibraryBookWithoutIdDTO {
+public class LibraryBookWithoutIdDTO
+{
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm")
-
     private LocalDateTime borrowedAt;
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm")
-
     private LocalDateTime returnBy;
 }

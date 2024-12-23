@@ -18,25 +18,31 @@ import java.util.stream.Collectors;
 
 @Service
 public class LibraryBookService {
+
     @Autowired
     private LibraryBookRepository libraryBookRepository;
+
     private final LibraryBookMapper libraryBookMapper = LibraryBookMapper.INSTANCE;
-    private final LibraryBookWithoutIdMapper libraryBookWithoutIdMapperMapper = LibraryBookWithoutIdMapper.INSTANCE;
+    private final LibraryBookWithoutIdMapper libraryBookWithoutIdMapper = LibraryBookWithoutIdMapper.INSTANCE;
+
     @Transactional
     public LibraryBookDTO saveLibraryBook(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("Book ID cannot be null");
         }
+
         LibraryBook libraryBook = new LibraryBook();
         libraryBook.setIdBook(id);
         libraryBook.setBorrowedAt(null);
         libraryBook.setReturnBy(null);
+
         libraryBookRepository.save(libraryBook);
+
         return libraryBookMapper.toDTO(libraryBook);
     }
 
     public List<LibraryBookDTO> getAvailableBooks() {
-        List<LibraryBook> availableBooks = libraryBookRepository.findByReturnByBeforeOrReturnByIsNull(LocalDateTime.now());
+        List<LibraryBook> availableBooks = libraryBookRepository.findAvailableBooks();
         return availableBooks.stream()
                 .map(LibraryBookMapper.INSTANCE::toDTO)
                 .collect(Collectors.toList());
@@ -52,6 +58,7 @@ public class LibraryBookService {
                         }
                         book.setBorrowedAt(updatedBookDTO.getBorrowedAt());
                     }
+
                     if (updatedBookDTO.getReturnBy() != null && !updatedBookDTO.getReturnBy().toString().isBlank()) {
                         if (updatedBookDTO.getReturnBy().isBefore(LocalDateTime.now())) {
                             throw new IllegalArgumentException("Return date must be in the future");
@@ -61,8 +68,10 @@ public class LibraryBookService {
                         }
                         book.setReturnBy(updatedBookDTO.getReturnBy());
                     }
+
                     libraryBookRepository.save(book);
-                    return libraryBookWithoutIdMapperMapper.toDTO(book);
+
+                    return libraryBookWithoutIdMapper.toDTO(book);
                 })
                 .orElseThrow(() -> new EntityNotFoundException("Library Book not found!"));
     }
