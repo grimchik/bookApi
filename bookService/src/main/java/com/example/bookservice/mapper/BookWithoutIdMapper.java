@@ -8,8 +8,8 @@ import org.mapstruct.factory.Mappers;
 @Mapper
 public interface BookWithoutIdMapper {
     BookWithoutIdMapper INSTANCE = Mappers.getMapper(BookWithoutIdMapper.class);
-    @Mapping(source = "isbn", target = "isbn")
+
     BookWithoutIdDTO toDTO(Book book);
-    @Mapping(source = "isbn", target = "isbn")
+
     Book toEntity(BookWithoutIdDTO bookDTO);
 }

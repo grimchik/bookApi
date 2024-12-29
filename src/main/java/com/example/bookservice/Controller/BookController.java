@@ -3,7 +3,6 @@ package com.example.bookservice.controller;
 import com.example.bookservice.dto.BookDTO;
 import com.example.bookservice.dto.BookWithoutIdDTO;
 import com.example.bookservice.entity.Book;
-import com.example.bookservice.exception.BookValidationException;
 import com.example.bookservice.repository.BookRepository;
 import com.example.bookservice.service.BookService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -43,12 +42,7 @@ public class BookController {
         bookService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
-    @PostMapping("/book")
-    public ResponseEntity<?> createBook(@Valid @RequestBody BookWithoutIdDTO book, @RequestHeader("Authorization") String authorizationHeader) throws BookValidationException {
-        String token = authorizationHeader.replace("Bearer ", "");
-        BookWithoutIdDTO bookWithoutIdDTO = bookService.saveBook(book,token);
-        return new ResponseEntity<>(bookWithoutIdDTO,HttpStatus.CREATED);
-    }
+
     @PutMapping("/book/{id}")
     public ResponseEntity<?> updateBook(@Valid @RequestBody BookDTO book, @PathVariable Long id)
     {

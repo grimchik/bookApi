@@ -49,7 +49,7 @@ public class LibraryBookService {
     }
 
     @Transactional
-    public LibraryBookWithoutIdDTO updateBook(Long id, LibraryBookWithoutIdDTO updatedBookDTO) throws EntityNotFoundException, IOException {
+    public LibraryBookWithoutIdDTO updateBook(Long id, LibraryBookWithoutIdDTO updatedBookDTO) throws EntityNotFoundException {
         return libraryBookRepository.findByIdBook(id)
                 .map(book -> {
                     if (updatedBookDTO.getBorrowedAt() != null && !updatedBookDTO.getBorrowedAt().toString().isBlank()) {

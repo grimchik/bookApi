@@ -20,20 +20,18 @@ public class LibraryBookController {
     private LibraryBookService librarybookService;
 
     @GetMapping("/available")
-    public ResponseEntity<List<LibraryBookDTO>> getAvailableBooks() {
+    public ResponseEntity<?> getAvailableBooks() {
         return ResponseEntity.ok().body(librarybookService.getAvailableBooks());
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateLibraryBook(@RequestBody LibraryBookWithoutIdDTO bookDTO, @PathVariable Long id) throws IOException {
-        LibraryBookWithoutIdDTO updatedBook = librarybookService.updateBook(id, bookDTO);
-        return ResponseEntity.ok().body(updatedBook);
+    public ResponseEntity<?> updateLibraryBook(@RequestBody LibraryBookWithoutIdDTO bookDTO, @PathVariable Long id)  {
+        return ResponseEntity.ok().body(librarybookService.updateBook(id, bookDTO));
     }
 
     @PostMapping("/add/{id}")
     public ResponseEntity<?> createLibraryBook(@PathVariable Long id) {
-        LibraryBookDTO savedBook = librarybookService.saveLibraryBook(id);
-        return ResponseEntity.ok(savedBook);
+        return ResponseEntity.ok(librarybookService.saveLibraryBook(id));
     }
 }
 

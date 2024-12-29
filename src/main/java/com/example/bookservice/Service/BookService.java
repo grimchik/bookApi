@@ -3,7 +3,6 @@ package com.example.bookservice.service;
 import com.example.bookservice.dto.BookDTO;
 import com.example.bookservice.dto.BookWithoutIdDTO;
 import com.example.bookservice.entity.Book;
-import com.example.bookservice.exception.BookValidationException;
 import com.example.bookservice.mapper.BookMapper;
 import com.example.bookservice.mapper.BookWithoutIdMapper;
 import com.example.bookservice.mapper.LibraryBookMapper;
@@ -72,18 +71,6 @@ public class BookService {
         libraryBookRepository.deleteById(libraryBook.getId());
     }
 
-    @Transactional
-    public BookWithoutIdDTO saveBook(BookWithoutIdDTO bookWithoutIdDDTO, String token) throws BookValidationException, EntityExistsException {
-        if (bookRepository.findByIsbn(bookWithoutIdDDTO.getIsbn()).isPresent()) {
-            throw new EntityExistsException("Book with the same ISBN already exists");
-        }
-        Book book = bookWithoutIdMapper.toEntity(bookWithoutIdDDTO);
-        Book savedBook = bookRepository.save(book);
-        externalServiceClient.addBookToExternalService(savedBook.getId(), token)
-                .doOnTerminate(() -> logger.info("Book ID {} added to external service", savedBook.getId()))
-                .subscribe();
-        return bookWithoutIdMapper.toDTO(savedBook);
-    }
 
     @Transactional
     public BookDTO updateBook(Long id, BookDTO updatedBookDTO) throws EntityNotFoundException {

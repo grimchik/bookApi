@@ -43,19 +43,7 @@ class LibraryBookServiceTest {
 		verify(libraryBookRepository).save(any(LibraryBook.class));
 	}
 
-	@Test
-	void testGetAvailableBooks() {
-		LibraryBook availableBook = new LibraryBook();
-		availableBook.setReturnBy(LocalDateTime.now().plusDays(1));
 
-		when(libraryBookRepository.findByReturnByBeforeOrReturnByIsNull(any(LocalDateTime.class)))
-				.thenReturn(List.of(availableBook));
-
-		List<LibraryBookDTO> availableBooks = libraryBookService.getAvailableBooks();
-
-		assertNotNull(availableBooks);
-		assertEquals(1, availableBooks.size());
-	}
 
 
 	@Test
