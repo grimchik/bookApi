@@ -33,5 +33,11 @@ public class LibraryBookController {
     public ResponseEntity<?> createLibraryBook(@PathVariable Long id) {
         return ResponseEntity.ok(librarybookService.saveLibraryBook(id));
     }
+
+    @DeleteMapping("delete/{id}")
+    public ResponseEntity<?> deleteBook(@PathVariable Long id) {
+        librarybookService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
 }
 

@@ -26,6 +26,14 @@ public class LibraryBookService {
     private final LibraryBookWithoutIdMapper libraryBookWithoutIdMapper = LibraryBookWithoutIdMapper.INSTANCE;
 
     @Transactional
+    public void deleteById(Long id) throws EntityNotFoundException {
+        if (!libraryBookRepository.existsByIdBook(id)) {
+            throw new EntityNotFoundException("Library Book with ID " + id + " not found");
+        }
+        libraryBookRepository.deleteByIdBook(id);
+    }
+
+    @Transactional
     public LibraryBookDTO saveLibraryBook(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("Book ID cannot be null");

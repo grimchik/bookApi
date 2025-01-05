@@ -33,15 +33,14 @@ public class BookController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteBook(@PathVariable Long id) {
-        bookService.deleteById(id);
+    public ResponseEntity<?> deleteBook(@PathVariable Long id, @RequestHeader("Authorization") String authorizationHeader) {
+        bookService.deleteById(id,authorizationHeader.replace("Bearer ", ""));
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping
     public ResponseEntity<?> createBook(@Valid @RequestBody BookWithoutIdDTO book, @RequestHeader("Authorization") String authorizationHeader) throws BookValidationException {
-        String token = authorizationHeader.replace("Bearer ", "");
-        return new ResponseEntity<>(bookService.saveBook(book, token), HttpStatus.CREATED);
+        return new ResponseEntity<>(bookService.saveBook(book, authorizationHeader.replace("Bearer ", "")), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")

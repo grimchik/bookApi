@@ -8,7 +8,7 @@ services:
       - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: bookservice_db
+      MYSQL_DATABASE: library
       MYSQL_USER: user
       MYSQL_PASSWORD: password
     volumes:
@@ -19,22 +19,71 @@ services:
       timeout: 5s
       retries: 5
 
+  eurekaserver:
+    build:
+      context: .
+      dockerfile: eurekaserver/Dockerfile
+    container_name: eurekaserver
+    ports:
+      - "8761:8761"
+
   bookservice:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: bookservice/Dockerfile
     container_name: bookservice
     ports:
-      - "8080:8080"
+      - "8081:8081"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/bookservice_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/library?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: true
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eurekaserver:8761/eureka/
     depends_on:
       mysql-db:
         condition: service_healthy
+      eurekaserver:
+        condition: service_started
+
+  authservice:
+    build:
+      context: .
+      dockerfile: authservice/Dockerfile
+    container_name: authservice
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/library?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JWT_SECRET: 3a7df7a8f73f4d10b812d4c6fdafeb25ba4e4ee7f8e3d8a9d3e1c6183f84fae1123456789abcdef0123456789abcdef
+      JWT_EXPIRATION: 7200000
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eurekaserver:8761/eureka/
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_started
+
+  apigateway:
+    build:
+      context: .
+      dockerfile: apigateway/Dockerfile
+    container_name: apigateway
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eurekaserver:8761/eureka/
+    depends_on:
+      eurekaserver:
+        condition: service_started
+      bookservice:
+        condition: service_started
+      authservice:
+        condition: service_started
 
 volumes:
   mysql_data:

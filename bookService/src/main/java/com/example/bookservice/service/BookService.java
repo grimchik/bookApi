@@ -15,18 +15,21 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class BookService {
+    private final WebClient.Builder webClientBuilder;
     private static final Logger logger = LoggerFactory.getLogger(BookService.class);
     private final BookRepository bookRepository;
 
     @Autowired
-    public BookService(BookRepository bookRepository) {
+    public BookService(WebClient.Builder webClientBuilder, BookRepository bookRepository) {
         this.bookRepository = bookRepository;
+        this.webClientBuilder = webClientBuilder;
     }
 
     private final BookMapper bookMapper = BookMapper.INSTANCE;
@@ -51,27 +54,57 @@ public class BookService {
     }
 
     @Transactional
-    public void deleteById(Long id) throws EntityNotFoundException {
+    public void deleteById(Long id, String token) throws EntityNotFoundException {
         if (!bookRepository.existsById(id)) {
             throw new EntityNotFoundException("Book with ID " + id + " not found");
         }
+
         bookRepository.deleteById(id);
-        //LibraryBook libraryBook = libraryBookRepository.findByIdBook(id)
-             //   .orElseThrow(() -> new EntityNotFoundException("Library book with ID Book " + id + " not found"));
-        //libraryBookRepository.deleteById(libraryBook.getId());
+
+        sendDeleteBookToExternalServiceAsync(id,token);
     }
 
+    private void sendDeleteBookToExternalServiceAsync(Long bookId, String token) {
+        String externalServiceUrl = "http://localhost:8080/api/library/delete/" + bookId;
+
+        webClientBuilder.build()
+                .delete()
+                .uri(externalServiceUrl)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .toBodilessEntity()
+                .doOnSuccess(response -> logger.info("Book ID {} successfully deleted in external service", bookId))
+                .doOnError(error -> logger.error("Failed to delete Book ID {} in external service: {}", bookId, error.getMessage()))
+                .subscribe();
+    }
+
+
     @Transactional
-    public BookWithoutIdDTO saveBook(BookWithoutIdDTO bookWithoutIdDDTO, String token) throws BookValidationException, EntityExistsException {
-        if (bookRepository.findByIsbn(bookWithoutIdDDTO.getIsbn()).isPresent()) {
+    public BookWithoutIdDTO saveBook(BookWithoutIdDTO bookWithoutIdDTO, String token) throws BookValidationException, EntityExistsException {
+        if (bookRepository.findByIsbn(bookWithoutIdDTO.getIsbn()).isPresent()) {
             throw new EntityExistsException("Book with the same ISBN already exists");
         }
-        Book book = bookWithoutIdMapper.toEntity(bookWithoutIdDDTO);
+
+        Book book = bookWithoutIdMapper.toEntity(bookWithoutIdDTO);
         Book savedBook = bookRepository.save(book);
-        //externalServiceClient.addBookToExternalService(savedBook.getId(), token)
-               // .doOnTerminate(() -> logger.info("Book ID {} added to external service", savedBook.getId()))
-               // .subscribe();
+
+        sendBookToExternalServiceAsync(savedBook.getId(), token);
+
         return bookWithoutIdMapper.toDTO(savedBook);
+    }
+
+    private void sendBookToExternalServiceAsync(Long bookId, String token) {
+        String externalServiceUrl = "http://localhost:8080/api/library/add/" + bookId;
+
+        webClientBuilder.build()
+                .post()
+                .uri(externalServiceUrl)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .toBodilessEntity()
+                .doOnSuccess(response -> logger.info("Book ID {} successfully sent to external service", bookId))
+                .doOnError(error -> logger.error("Failed to send Book ID {} to external service: {}", bookId, error.getMessage()))
+                .subscribe();
     }
 
     @Transactional

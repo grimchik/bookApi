@@ -18,5 +18,6 @@ public interface LibraryBookRepository extends JpaRepository<LibraryBook,Long> {
             "OR (return_by < NOW() AND borrowed_at IS NOT NULL)", nativeQuery = true)
     List<LibraryBook> findAvailableBooks();
     void deleteByIdBook(Long idBook);
+    boolean existsByIdBook(Long id);
 }
 
