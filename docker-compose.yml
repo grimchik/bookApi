@@ -14,10 +14,83 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  librarybookservice:
+    build:
+      context: ./libraryBookService
+    container_name: librarybookservice
+    depends_on:
+      - mysql-db
+      - eurekaserver
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/library?useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eurekaserver:8761/eureka/
+      SPRING_APPLICATION_NAME: librarybookservice
+    ports:
+      - "8082:8082"
+
+  bookservice:
+    build:
+      context: ./bookService
+    container_name: bookservice
+    depends_on:
+      - mysql-db
+      - librarybookservice
+      - eurekaserver
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/library?useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eurekaserver:8761/eureka/
+      SPRING_APPLICATION_NAME: bookservice
+    ports:
+      - "8081:8081"
+
+  authservice:
+    build:
+      context: ./authService
+    container_name: authservice
+    depends_on:
+      - mysql-db
+      - eurekaserver
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/library?useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eurekaserver:8761/eureka/
+      SPRING_APPLICATION_NAME: authservice
+    ports:
+      - "8084:8084"
+
+  apigateway:
+    build:
+      context: ./apigateway
+    container_name: apigateway
+    depends_on:
+      - eurekaserver
+      - bookservice
+      - librarybookservice
+      - authservice
+    environment:
+      SPRING_APPLICATION_NAME: apigateway
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eurekaserver:8761/eureka/
+    ports:
+      - "8080:8080"
+
+  eurekaserver:
+    build:
+      context: ./eurekaServer
+    container_name: eurekaserver
+    environment:
+      SPRING_APPLICATION_NAME: eurekaserver
+    ports:
+      - "8761:8761"
 
 volumes:
   mysql_data:
