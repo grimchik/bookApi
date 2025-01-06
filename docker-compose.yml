@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   mysql-db:
     image: mysql:8.0
@@ -11,6 +10,7 @@ services:
       MYSQL_DATABASE: library
       MYSQL_USER: user
       MYSQL_PASSWORD: password
+      MYSQL_ROOT_HOST: '%'
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -18,55 +18,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - mynetwork
 
-  librarybookservice:
+  eurekaserver:
     build:
-      context: ./libraryBookService
-    container_name: librarybookservice
-    depends_on:
-      - mysql-db
-      - eurekaserver
+      context: ./eurekaServer
+    container_name: eurekaserver
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/library?useSSL=false&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: user
-      SPRING_DATASOURCE_PASSWORD: password
-      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eurekaserver:8761/eureka/
-      SPRING_APPLICATION_NAME: librarybookservice
+      SPRING_APPLICATION_NAME: eurekaserver
     ports:
-      - "8082:8082"
-
-  bookservice:
-    build:
-      context: ./bookService
-    container_name: bookservice
-    depends_on:
-      - mysql-db
-      - librarybookservice
-      - eurekaserver
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/library?useSSL=false&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: user
-      SPRING_DATASOURCE_PASSWORD: password
-      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eurekaserver:8761/eureka/
-      SPRING_APPLICATION_NAME: bookservice
-    ports:
-      - "8081:8081"
-
-  authservice:
-    build:
-      context: ./authService
-    container_name: authservice
-    depends_on:
-      - mysql-db
-      - eurekaserver
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/library?useSSL=false&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: user
-      SPRING_DATASOURCE_PASSWORD: password
-      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eurekaserver:8761/eureka/
-      SPRING_APPLICATION_NAME: authservice
-    ports:
-      - "8084:8084"
+      - "8761:8761"
+    networks:
+      - mynetwork
 
   apigateway:
     build:
@@ -80,17 +44,76 @@ services:
     environment:
       SPRING_APPLICATION_NAME: apigateway
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eurekaserver:8761/eureka/
+      SPRING_MVC_TIMEZONE: Europe/Minsk
     ports:
       - "8080:8080"
+    networks:
+      - mynetwork
 
-  eurekaserver:
+  bookservice:
     build:
-      context: ./eurekaServer
-    container_name: eurekaserver
+      context: ./bookService
+    container_name: bookservice
+    depends_on:
+      - mysql-db
+      - librarybookservice
+      - eurekaserver
     environment:
-      SPRING_APPLICATION_NAME: eurekaserver
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/library?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eurekaserver:8761/eureka/
+      SPRING_APPLICATION_NAME: bookservice
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: true
     ports:
-      - "8761:8761"
+      - "8081:8081"
+    networks:
+      - mynetwork
+
+  authservice:
+    build:
+      context: ./authservice
+    container_name: authservice
+    depends_on:
+      - mysql-db
+      - eurekaserver
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/library?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eurekaserver:8761/eureka/
+      SPRING_APPLICATION_NAME: authservice
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: true
+    ports:
+      - "8084:8084"
+    networks:
+      - mynetwork
+
+  librarybookservice:
+    build:
+      context: ./libraryBookService
+    container_name: librarybookservice
+    depends_on:
+      - mysql-db
+      - eurekaserver
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/library?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eurekaserver:8761/eureka/
+      SPRING_APPLICATION_NAME: librarybookservice
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: true
+    ports:
+      - "8082:8082"
+    networks:
+      - mynetwork
 
 volumes:
   mysql_data:
+
+networks:
+  mynetwork:
+    driver: bridge
