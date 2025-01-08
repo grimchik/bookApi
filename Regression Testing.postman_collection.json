@@ -163,7 +163,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"isbn\": \"1-111-11111-0005\",\r\n    \"title\": \"dsfdsfdsfds44\",\r\n    \"genre\": \"string\",\r\n    \"description\": \"string\",\r\n    \"author\": \"string\"\r\n}",
+					"raw": "{\r\n    \"isbn\": \"1-111-11111-1199\",\r\n    \"title\": \"title\",\r\n    \"genre\": \"genre\",\r\n    \"description\": \"des\",\r\n    \"author\": \"author\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -308,7 +308,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"username\": \"gr1m\",\r\n    \"password\": \"12sashasv\"\r\n}",
+					"raw": "{\r\n    \"username\": \"user\",\r\n    \"password\": \"password\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -338,7 +338,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"username\": \"\",\r\n    \"password\": \"\"\r\n}",
+					"raw": "{\r\n    \"username\": \"user\",\r\n    \"password\": \"password\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
